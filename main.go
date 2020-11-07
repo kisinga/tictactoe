@@ -18,8 +18,10 @@ const (
 type playerTurn bool
 
 type gridItem struct {
+	//played keeps a pointer to the player who made the move
 	played *playerTurn
-	value  xoro
+	//value is the values played
+	value xoro
 	widget.Icon
 	status *gameStatus
 }
@@ -31,7 +33,7 @@ type nextPlayerTurn struct {
 type gameStatus struct {
 	window         *fyne.Window
 	nextPlayerTurn nextPlayerTurn
-	grid           [9]gridItem
+	grid           [9]*gridItem
 }
 
 func main() {
@@ -40,11 +42,13 @@ func main() {
 	status := gameStatus{
 		window:         &gameWindow,
 		nextPlayerTurn: nextPlayerTurn{},
-		grid:           [9]gridItem{},
+		grid:           [9]*gridItem{},
 	}
 	container := fyne.NewContainerWithLayout(layout.NewGridLayout(3))
 	for i := 0; i < 9; i++ {
-		container.Add(createItem(&status))
+		item := createItem(i, &status)
+		status.grid[i] = item
+		container.Add(item)
 	}
 	gameWindow.SetContent(container)
 	gameWindow.ShowAndRun()
@@ -52,7 +56,7 @@ func main() {
 func (b *gridItem) MinSize() fyne.Size {
 	return fyne.NewSize(128, 128)
 }
-func createItem(status *gameStatus) *gridItem {
+func createItem(pos int, status *gameStatus) *gridItem {
 	item := &gridItem{
 		played: nil,
 		value:  o,
@@ -68,9 +72,11 @@ func (b *gridItem) Tapped(ev *fyne.PointEvent) {
 		return
 	}
 	currentPlay := !b.status.nextPlayerTurn.xoro
+	turn := !b.status.nextPlayerTurn.playerTurn
+	b.played = &turn
 	b.status.nextPlayerTurn = nextPlayerTurn{
 		turnCount:  b.status.nextPlayerTurn.turnCount + 1,
-		playerTurn: !b.status.nextPlayerTurn.playerTurn,
+		playerTurn: turn,
 		xoro:       currentPlay,
 	}
 	if currentPlay == x {
