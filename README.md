@@ -1,3 +1,5 @@
 # tictactoe
 This is a simple golang cross-platform desktop app using fyne framework.
 Have fun playing Tic Tac Toe against the computer or a human friend.
+I didnt know where to start so I took inspiration from [this js project](https://code-boxx.com/simple-javascript-tic-tac-toe)
+Created just for the fun of it.
