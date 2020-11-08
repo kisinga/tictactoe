@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"fyne.io/fyne"
 	"fyne.io/fyne/app"
 	"fyne.io/fyne/dialog"
@@ -46,12 +45,14 @@ type gameStatus struct {
 	firstPlayer    playerTurn
 	nextPlayerTurn nextPlayerTurn
 	grid           [9]*gridItem
+	container      *fyne.Container
 }
 
 func main() {
 	myApp := app.New()
 	gameWindow := myApp.NewWindow("Tic Tac Toe")
 	firstPlayer := player2
+	game := fyne.NewContainerWithLayout(layout.NewGridLayout(3))
 	status := gameStatus{
 		window: &gameWindow,
 		nextPlayerTurn: nextPlayerTurn{
@@ -61,19 +62,36 @@ func main() {
 		},
 		firstPlayer: firstPlayer,
 		grid:        [9]*gridItem{},
+		container:   game,
 	}
-	container := fyne.NewContainerWithLayout(layout.NewGridLayout(3))
+	status.resetGame()
+	startButton := widget.NewButtonWithIcon("Reset Game", theme.ViewRefreshIcon(), func() {
+		status.resetGame()
+	})
+	gameWindow.SetContent(fyne.NewContainerWithLayout(layout.NewVBoxLayout(), startButton, game))
+	gameWindow.ShowAndRun()
+}
+
+//resetGame resets all gridItem to their default values
+func (status gameStatus) resetGame() {
+	initialised := status.container.Objects
 	for i := 0; i < 9; i++ {
 		item := createItem(&status)
 		status.grid[i] = item
-		container.Add(item)
+		if initialised != nil {
+			status.container.Objects[i] = item
+			continue
+		}
+		status.container.Add(item)
 	}
-	gameWindow.SetContent(container)
-	gameWindow.ShowAndRun()
 }
+
+//MinSize implements the default fyne definition to provide min icon size
 func (b *gridItem) MinSize() fyne.Size {
 	return fyne.NewSize(128, 128)
 }
+
+//createItem abstracts the creation of a grid item
 func createItem(status *gameStatus) *gridItem {
 	item := &gridItem{
 		played: nil,
@@ -84,6 +102,8 @@ func createItem(status *gameStatus) *gridItem {
 	return item
 }
 
+//Tapped implements default fyne definition
+//This function is called when the gridItem is "clicked"
 func (b *gridItem) Tapped(ev *fyne.PointEvent) {
 	if b.played != nil {
 		return
@@ -96,8 +116,8 @@ func (b *gridItem) Tapped(ev *fyne.PointEvent) {
 
 	b.status.nextPlayerTurn = nextPlayerTurn{
 		turnCount:  b.status.nextPlayerTurn.turnCount + 1,
-		playerTurn: !playerMove.playerTurn,
-		xoro:       playerMove.xoro,
+		playerTurn: !b.status.nextPlayerTurn.playerTurn,
+		xoro:       !b.status.nextPlayerTurn.xoro,
 	}
 	if playerMove.xoro == x {
 		b.SetResource(theme.CancelIcon())
@@ -106,60 +126,74 @@ func (b *gridItem) Tapped(ev *fyne.PointEvent) {
 	}
 	b.status.checkStatus()
 }
-func (s *gameStatus) checkStatus() {
+
+//checkStatus checks the game for any winner.
+//It should be called whenever a gridItem is "clicked"
+func (status *gameStatus) checkStatus() {
 	var winner *playerTurn
+	if status.nextPlayerTurn.turnCount == 9 {
+		status.announceWinner(nil)
+	}
 	// Horizontal row checks
 	for i := 0; i < 9; i += 3 {
-		fmt.Println(s.grid[i].played, i)
-		if s.grid[i].played != nil && s.grid[i+1].played != nil && s.grid[i+2].played != nil {
-			if win := s.grid[i].played.xoro == s.grid[i+1].played.xoro == s.grid[i+2].played.xoro; win {
-				winner = &s.grid[i].played.playerTurn
+		if status.grid[i].played != nil && status.grid[i+1].played != nil && status.grid[i+2].played != nil {
+			if win := status.grid[i].played.xoro == status.grid[i+1].played.xoro && status.grid[i].played.xoro == status.grid[i+2].played.xoro; win {
+				winner = &status.grid[i].played.playerTurn
 				continue
 			}
 		}
 	}
 	if winner != nil {
-		s.announceWinner(*winner)
+		status.announceWinner(winner)
 		return
 	}
 	// Vertical row checks
 	for i := 0; i < 3; i += 3 {
-		if s.grid[i].played != nil && s.grid[i+3].played != nil && s.grid[i+6].played != nil {
-			if win := s.grid[i].played.xoro == s.grid[i+3].played.xoro == s.grid[i+6].played.xoro; win {
-				winner = &s.grid[i].played.playerTurn
+		if status.grid[i].played != nil && status.grid[i+3].played != nil && status.grid[i+6].played != nil {
+			if win := status.grid[i].played.xoro == status.grid[i+3].played.xoro && status.grid[i].played.xoro == status.grid[i+6].played.xoro; win {
+				winner = &status.grid[i].played.playerTurn
 				continue
 			}
 		}
 	}
 	if winner != nil {
-		s.announceWinner(*winner)
+		status.announceWinner(winner)
 		return
 	}
 	// Diagonal row checks
 
-	if s.grid[0].played != nil && s.grid[4].played != nil && s.grid[8].played != nil {
-		if win := s.grid[0].played.xoro == s.grid[4].played.xoro == s.grid[8].played.xoro; win {
-			winner = &s.grid[0].played.playerTurn
+	if status.grid[0].played != nil && status.grid[4].played != nil && status.grid[8].played != nil {
+		if win := status.grid[0].played.xoro == status.grid[4].played.xoro && status.grid[0].played.xoro == status.grid[8].played.xoro; win {
+			winner = &status.grid[0].played.playerTurn
 		}
 	}
 	if winner != nil {
-		s.announceWinner(*winner)
+		status.announceWinner(winner)
 		return
 	}
-	if s.grid[2].played != nil && s.grid[4].played != nil && s.grid[6].played != nil {
-		if win := s.grid[2].played.xoro == s.grid[4].played.xoro == s.grid[6].played.xoro; win {
-			winner = &s.grid[2].played.playerTurn
+	if status.grid[2].played != nil && status.grid[4].played != nil && status.grid[6].played != nil {
+		if win := status.grid[2].played.xoro == status.grid[4].played.xoro && status.grid[2].played.xoro == status.grid[6].played.xoro; win {
+			winner = &status.grid[2].played.playerTurn
 		}
 	}
 	if winner != nil {
-		s.announceWinner(*winner)
+		status.announceWinner(winner)
 		return
 	}
 }
-func (s gameStatus) announceWinner(turn playerTurn) {
-	if turn {
-		dialog.ShowInformation("Player 1 has won!", "Congratulations to player 1 for winning.", *s.window)
-		return
+
+//announceWinner displays who won and calls resets the game as well
+func (status gameStatus) announceWinner(turn *playerTurn) {
+	if turn != nil {
+		if *turn {
+			dialog.ShowInformation("Player 1 has won!", "Congratulations to player 1 for winning.", *status.window)
+			return
+		} else {
+			dialog.ShowInformation("Player 2 has won!", "Congratulations to player 2 for winning.", *status.window)
+			return
+		}
+	} else {
+		dialog.ShowInformation("Draw", "Great game, try again", *status.window)
 	}
-	dialog.ShowInformation("Player 2 has won!", "Congratulations to player 2 for winning.", *s.window)
+	status.resetGame()
 }
