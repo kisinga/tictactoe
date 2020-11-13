@@ -14,6 +14,6 @@ fyne-cross/bin
 it should just run after installation
  
 # Screenshots
-![1](/assets/screeshots/1.png)
-![2](/assets/screeshots/2.png)
-![3](/assets/screeshots/3.png)
+![1](/assets/screenshots/1.png)
+![2](/assets/screenshots/2.png)
+![3](/assets/screenshots/3.png)
