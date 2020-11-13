@@ -12,3 +12,4 @@ Run as a regular go app
 Download the correct executable for your platform under 
 fyne-cross/bin
 it should just run after installation
+ 

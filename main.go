@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
+
 	"fyne.io/fyne"
 	"fyne.io/fyne/app"
 	"fyne.io/fyne/dialog"
@@ -46,6 +49,8 @@ type gameStatus struct {
 	nextPlayerTurn nextPlayerTurn
 	grid           [9]*gridItem
 	container      *fyne.Container
+	xasset         *fyne.StaticResource
+	oasset         *fyne.StaticResource
 }
 
 func main() {
@@ -53,6 +58,14 @@ func main() {
 	gameWindow := myApp.NewWindow("Tic Tac Toe")
 	firstPlayer := player2
 	game := fyne.NewContainerWithLayout(layout.NewGridLayout(3))
+	xasset, err := ioutil.ReadFile("./assets/x.png")
+	if err != nil {
+		fmt.Errorf("cant fetch x asset")
+	}
+	oasset, err := ioutil.ReadFile("./assets/o.png")
+	if err != nil {
+		fmt.Errorf("cant fetch o asset")
+	}
 	status := gameStatus{
 		window: &gameWindow,
 		nextPlayerTurn: nextPlayerTurn{
@@ -63,6 +76,14 @@ func main() {
 		firstPlayer: firstPlayer,
 		grid:        [9]*gridItem{},
 		container:   game,
+		xasset: &fyne.StaticResource{
+			StaticName:    "x.png",
+			StaticContent: xasset,
+		},
+		oasset: &fyne.StaticResource{
+			StaticName:    "o.png",
+			StaticContent: oasset,
+		},
 	}
 	status.resetGame()
 	startButton := widget.NewButtonWithIcon("Reset Game", theme.ViewRefreshIcon(), func() {
@@ -120,9 +141,12 @@ func (b *gridItem) Tapped(ev *fyne.PointEvent) {
 		xoro:       !b.status.nextPlayerTurn.xoro,
 	}
 	if playerMove.xoro == x {
-		b.SetResource(theme.CancelIcon())
+		b.SetResource(b.status.xasset)
+		// b.SetResource(theme.CancelIcon())
 	} else {
-		b.SetResource(theme.ConfirmIcon())
+		b.SetResource(b.status.oasset)
+
+		// b.SetResource(theme.ConfirmIcon())
 	}
 	b.status.checkStatus()
 }
