@@ -13,3 +13,7 @@ Download the correct executable for your platform under
 fyne-cross/bin
 it should just run after installation
  
+# Screenshots
+![1](/assets/screeshots/1.png)
+![2](/assets/screeshots/2.png)
+![3](/assets/screeshots/3.png)

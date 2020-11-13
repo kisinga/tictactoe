@@ -55,6 +55,14 @@ type gameStatus struct {
 
 func main() {
 	myApp := app.New()
+	icon, err := ioutil.ReadFile("./assets/icon.png")
+	if err != nil {
+		fmt.Errorf("cant fetch icon asset")
+	}
+	myApp.SetIcon(&fyne.StaticResource{
+		StaticName:    "icon.png",
+		StaticContent: icon,
+	})
 	gameWindow := myApp.NewWindow("Tic Tac Toe")
 	firstPlayer := player2
 	game := fyne.NewContainerWithLayout(layout.NewGridLayout(3))
